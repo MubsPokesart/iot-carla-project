@@ -1,1 +1,1 @@
-"""This module contains the orchestration logic for the CARLA Environment Foundations project."""
+"""Orchestration logic for the CARLA Environment Foundations project."""
