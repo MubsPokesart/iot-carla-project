@@ -1,4 +1,5 @@
-"""This module contains the CLI for the CARLA Environment Foundations project."""
+"""CLI for the CARLA Environment Foundations project."""
+
 import json
 import os
 import time
@@ -112,7 +113,7 @@ def health():
 @click.option("--map_name", default="Town03")
 @click.option("--fps", type=int, default=20)
 @click.option("--ticks", type=int, default=50)
-def determinism_check(seed1, seed2, map_name, fps, ticks):
+def determinism_check(seed1, seed2, _map_name, _fps, ticks):
     """Run two sessions and compares summary hashes."""
     run_id1 = f"determinism_run_{seed1}"
     run_id2 = f"determinism_run_{seed2}"
