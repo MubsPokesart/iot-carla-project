@@ -7,8 +7,10 @@ profile = "black"
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "C90", "I", "N", "D", "UP", "B", "A", "C4", "T20", "SIM", "ARG"]
-ignore = ["E501"]
+ignore = ["E501", "D203", "D213"]
 
 [tool.mypy]
 python_version = "3.10"

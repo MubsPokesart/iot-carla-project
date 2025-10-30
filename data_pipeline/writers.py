@@ -1,9 +1,10 @@
+"""CSV writing utilities for frame data."""
+
 import csv
 
 
 def write_frames_to_csv(filepath, frames):
-    """Writes a list of frame data to a CSV file.
-    """
+    """Write a list of frame data to a CSV file."""
     with open(filepath, "w", newline="") as csvfile:
         if not frames:
             return

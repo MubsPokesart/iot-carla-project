@@ -1,4 +1,5 @@
-"""This module contains the CARLA client for the CARLA Environment Foundations project."""
+"""CARLA client for the CARLA Environment Foundations project."""
+
 import carla
 
 
