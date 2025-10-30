@@ -1,0 +1,38 @@
+.App {
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin-top: 2rem;
+}
+
+.run-list {
+  width: 45%;
+  border: 1px solid #ccc;
+  padding: 1rem;
+}
+
+.run-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.run-list li {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.run-list li:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.run-detail {
+  width: 45%;
+  border: 1px solid #ccc;
+  padding: 1rem;
+}

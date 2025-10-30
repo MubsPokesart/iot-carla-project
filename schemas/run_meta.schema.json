@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RunMeta",
+  "type": "object",
+  "required": ["scenario_id", "run_id", "seed", "carla_version", "map", "weather", "start_ts", "end_ts"],
+  "properties": {
+    "scenario_id": {"type": "string"},
+    "run_id": {"type": "string"},
+    "seed": {"type": "integer"},
+    "carla_version": {"type": "string"},
+    "map": {"type": "string"},
+    "weather": {"type": "string"},
+    "start_ts": {"type": "string", "format": "date-time"},
+    "end_ts": {"type": "string", "format": "date-time"}
+  }
+}

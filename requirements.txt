@@ -1,0 +1,19 @@
+# Please install the carla dependency matching your CARLA simulator version.
+# e.g., carla==0.9.13
+
+pydantic>=2
+jsonschema
+numpy
+pandas
+pyarrow
+click
+flask
+rich
+typer
+pytest
+pytest-cov
+mypy
+ruff
+black
+isort
+pre-commit

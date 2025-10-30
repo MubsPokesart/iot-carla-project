@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KpiSummary",
+  "type": "object",
+  "properties": {
+    "avg_travel_time": {"type": "number"},
+    "throughput": {"type": "number"},
+    "queue_length": {"type": "number"},
+    "congestion_index": {"type": "number"}
+  },
+  "additionalProperties": true
+}
