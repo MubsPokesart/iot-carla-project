@@ -1,4 +1,4 @@
-.PHONY: help setup carla_up smoke health determinism_check lint test web build-web
+.PHONY: help setup carla_up smoke health determinism_check tl-monitor annotate-roi lint test web build-web
 
 help:
 	@echo "Commands:"
@@ -7,6 +7,8 @@ help:
 	@echo "  smoke              : Run a smoke test."
 	@echo "  health             : Check the health of the CARLA server."
 	@echo "  determinism_check  : Run a determinism check."
+	@echo "  tl-monitor         : Run traffic light monitoring simulation."
+	@echo "  annotate-roi       : Launch ROI annotation tool (requires IMAGE=path/to/image.png)."
 	@echo "  lint               : Run linters."
 	@echo "  test               : Run tests."
 	@echo "  web                : Run the web application in development mode."
@@ -29,6 +31,16 @@ health:
 
 determinism_check:
 	python -m orchestration.runner determinism-check
+
+tl-monitor:
+	python -m orchestration.runner tl-monitor
+
+annotate-roi:
+ifndef IMAGE
+	@echo "Error: Please specify IMAGE=path/to/image.png"
+	@exit 1
+endif
+	python scripts/roi_annotator.py $(IMAGE)
 
 format:
 	python -m ruff check --fix .
