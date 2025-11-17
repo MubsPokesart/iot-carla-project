@@ -247,8 +247,8 @@ def tl_monitor(town, group_index, num_vehicles, duration, fps, seed):
         for vehicle in vehicles:
             try:
                 vehicle.destroy()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to destroy vehicle (id={getattr(vehicle, 'id', 'unknown')}): {e}")
 
         # Disable synchronous mode
         settings.synchronous_mode = False
