@@ -1,0 +1,54 @@
+# Traffic Light Monitoring Configuration
+
+# CARLA simulation settings
+simulation:
+  town: "Town10HD_Opt"
+  group_index: 0  # Which traffic light group to monitor
+  num_autopilot: 40  # Number of NPC vehicles to spawn
+  dt: 0.05  # Fixed delta seconds for synchronous mode
+  duration: 120  # Simulation duration in seconds
+
+# Camera settings
+camera:
+  resolution:
+    width: 1280
+    height: 720
+  fov: 70  # Field of view in degrees
+  position:
+    back_m: 15.0  # Distance behind traffic light
+    side_m: 1.2   # Lateral offset
+    height_m: 5.0  # Height above ground
+
+# Output settings
+output:
+  save_root: "outputs"
+  save_every_n: 10  # Save frames every N ticks
+
+# Detection settings
+detection:
+  yolo_model: "yolo11n.pt"
+  device: "cpu"  # "cpu" or "cuda"
+  vehicle_classes:
+    - car
+    - truck
+    - bus
+    - motorbike
+    - motorcycle
+    - bicycle
+
+# Tracking settings
+tracking:
+  iou_threshold: 0.3
+  max_age: 20  # Frames to keep lost tracks
+  stop_speed_threshold: 1.3  # Pixels per tick
+  stripe_confirm_frames: 2  # Frames in stripe before counting crossing
+
+# Smoothing parameters (Exponential Moving Average)
+smoothing:
+  queue_alpha: 0.3
+  arrival_alpha: 0.2
+  discharge_alpha: 0.2
+
+# Queue analysis
+queue:
+  long_wait_threshold: 60.0  # Seconds for "long wait" classification

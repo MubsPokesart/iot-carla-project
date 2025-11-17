@@ -2,10 +2,12 @@
 
 import json
 import os
+import random
 import time
 import uuid
 from datetime import datetime
 
+import carla
 import click
 
 from data_pipeline.writers import write_frames_to_csv
@@ -139,6 +141,168 @@ def determinism_check(seed1, seed2, _map_name, _fps, ticks):
         logger.info("Determinism check passed!")
     else:
         logger.error("Determinism check failed!")
+
+
+@cli.command()
+@click.option("--town", default="Town10HD_Opt", help="CARLA town/map name")
+@click.option("--group-index", type=int, default=0, help="Traffic light group to monitor")
+@click.option("--num-vehicles", type=int, default=40, help="Number of NPC vehicles")
+@click.option("--duration", type=int, default=120, help="Simulation duration in seconds")
+@click.option("--fps", type=int, default=20, help="Frames per second")
+@click.option("--seed", type=int, default=7, help="Random seed for spawning")
+def tl_monitor(town, group_index, num_vehicles, duration, fps, seed):
+    """Run traffic light monitoring simulation."""
+    from orchestration.tl_monitoring.config import TLMonitoringConfig
+    from orchestration.tl_monitoring.observers.tl_observer import TLObserverManager
+    from orchestration.tl_monitoring.utils.carla_helpers import (
+        CameraSpawner,
+        TrafficLightHelper,
+    )
+
+    logger.info("Starting Traffic Light Monitoring")
+    logger.info(f"Town: {town}, Group: {group_index}, Vehicles: {num_vehicles}")
+
+    # Connect to CARLA
+    client = carla.Client("localhost", 2000)
+    client.set_timeout(10.0)
+
+    # Load world
+    world = client.load_world(town, map_layers=carla.MapLayer.NONE)
+
+    # Enable synchronous mode
+    dt = 1.0 / fps
+    settings = world.get_settings()
+    settings.synchronous_mode = True
+    settings.fixed_delta_seconds = dt
+    world.apply_settings(settings)
+
+    # Get traffic light groups
+    groups = TrafficLightHelper.get_traffic_light_groups(world)
+    if not groups:
+        logger.error("No traffic light groups found in the world")
+        return
+
+    if group_index >= len(groups):
+        logger.error(f"Invalid group index {group_index}. Found {len(groups)} groups")
+        return
+
+    selected_group = groups[group_index]
+    logger.info(f"Monitoring group {group_index} with {len(selected_group)} traffic lights")
+
+    # Create configuration
+    config = TLMonitoringConfig(
+        town=town, group_index=group_index, num_autopilot=num_vehicles, dt=dt
+    )
+
+    # Get blueprint library
+    bp_library = world.get_blueprint_library()
+
+    # Create observer manager
+    observer_manager = TLObserverManager(
+        world, selected_group.actors, bp_library, config
+    )
+
+    # Move spectator to first camera
+    if len(observer_manager.observers) > 0:
+        first_camera = observer_manager.observers[0].camera
+        CameraSpawner.fly_spectator_to_camera(world, first_camera, height_offset=12.0)
+
+    # Spawn NPC vehicles
+    vehicles = _spawn_autopilot_vehicles(world, client, num_vehicles, seed)
+    logger.info(f"Spawned {len(vehicles)} autopilot vehicles")
+
+    # Run simulation
+    try:
+        start_time = time.time()
+        frame_count = 0
+
+        while time.time() - start_time < duration:
+            world.tick()
+            snapshot = world.get_snapshot()
+            frame_id = snapshot.frame
+
+            # Process all observers
+            results = observer_manager.process_frame(frame_id)
+
+            # Log results periodically
+            if frame_id % 40 == 0 and results:
+                for result in results:
+                    logger.info(
+                        f"[F{frame_id:06d}] TL[{result['stable_id']}] "
+                        f"{result['state']:<6} t={result['time_in_state']:.1f}s "
+                        f"q={result['queue']} (ema={result['queue_ema']:.2f})"
+                    )
+
+            frame_count += 1
+
+        logger.info(f"Simulation completed: {frame_count} frames in {duration}s")
+
+    finally:
+        logger.info("Cleaning up...")
+
+        # Destroy observers
+        observer_manager.destroy_all()
+
+        # Destroy vehicles
+        for vehicle in vehicles:
+            try:
+                vehicle.destroy()
+            except Exception as e:
+                logger.warning(f"Failed to destroy vehicle (id={getattr(vehicle, 'id', 'unknown')}): {e}")
+
+        # Disable synchronous mode
+        settings.synchronous_mode = False
+        world.apply_settings(settings)
+
+        logger.info("Cleanup complete")
+
+
+def _spawn_autopilot_vehicles(
+    world: carla.World, client: carla.Client, num_vehicles: int, seed: int
+) -> list:
+    """Spawn autopilot vehicles in the world.
+
+    Args:
+        world: CARLA world instance
+        client: CARLA client instance
+        num_vehicles: Number of vehicles to spawn
+        seed: Random seed
+
+    Returns:
+        List of spawned vehicle actors
+    """
+    if num_vehicles <= 0:
+        return []
+
+    random.seed(seed)
+
+    bp_library = world.get_blueprint_library()
+    spawn_points = world.get_map().get_spawn_points()
+    random.shuffle(spawn_points)
+
+    # Setup traffic manager
+    traffic_manager = client.get_trafficmanager()
+    tm_port = traffic_manager.get_port()
+    traffic_manager.set_synchronous_mode(True)
+    traffic_manager.global_percentage_speed_difference(10.0)
+
+    vehicles = []
+    for spawn_point in spawn_points[: num_vehicles * 2]:
+        if len(vehicles) >= num_vehicles:
+            break
+
+        # Select random vehicle blueprint
+        vehicle_bp = random.choice(bp_library.filter("vehicle.*"))
+        if vehicle_bp.has_attribute("role_name"):
+            vehicle_bp.set_attribute("role_name", "autopilot")
+
+        # Try to spawn vehicle
+        vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
+        if vehicle:
+            vehicle.set_autopilot(True, tm_port)
+            vehicles.append(vehicle)
+
+    return vehicles
 
 
 if __name__ == "__main__":
