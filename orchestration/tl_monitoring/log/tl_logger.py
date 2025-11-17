@@ -205,5 +205,5 @@ class TLMetricsLogger:
         for file_handle in (self.tick_csv, self.cross_csv):
             try:
                 file_handle.close()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[WARN] Failed to close log file: {e}")
