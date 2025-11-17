@@ -309,8 +309,8 @@ class TLObserverManager:
         for observer in self.observers:
             try:
                 observer.destroy()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[WARN] Failed to destroy observer: {e}")
 
     def __len__(self) -> int:
         """Get number of observers."""
